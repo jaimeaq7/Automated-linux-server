@@ -1,0 +1,67 @@
+- hosts: host1
+  remote_user: ubuntu
+
+  tasks:
+   - name: update and upgrade
+     become: yes
+     apt:
+      name: libpam-google-authenticator
+      state: present
+      update_cache: yes
+
+   - name: copy .google_authenticator
+     copy:
+      src: .google_authenticator
+      dest: ~/.google_authenticator
+      
+   - name: UsePAM yes
+     become: yes
+     lineinfile:
+       path: /etc/ssh/sshd_config
+       regexp: "^UsePAM"
+       line: "UsePAM yes"
+       state: present
+       backup: yes
+
+   - name: ChallengeResponseAuthentication yes
+     become: yes
+     lineinfile:
+       path: /etc/ssh/sshd_config
+       regexp: "^ChallengeResponseAuthentication"
+       line: "ChallengeResponseAuthentication yes"
+       state: present
+       backup: yes
+
+   - name: AuthenticationMethods publickey,keyboard-interactive
+     become: yes
+     lineinfile:
+       path: /etc/ssh/sshd_config
+       regexp: "^AuthenticationMethods"
+       line: "AuthenticationMethods publickey,keyboard-interactive"
+       state: present
+       backup: yes
+
+   - name: #@include common-auth
+     become: yes
+     lineinfile:
+       path: /etc/pam.d/sshd
+       regexp: "^@include common-auth"
+       line: "#@include common-auth"
+       state: present
+       backup: yes
+
+   - name: Add line auth   required   pam_google_authenticator.so
+     become: yes
+     blockinfile:
+       path: /etc/pam.d/sshd
+       state: present
+       insertafter: "#@include common-auth"
+       block: |
+        # two-factor authentication via Google Authenticator
+        auth   required   pam_google_authenticator.so
+        
+   - name: reload ssh
+     become: yes
+     service:
+       name: sshd
+       state: reloaded
