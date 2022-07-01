@@ -8,11 +8,14 @@
       name: libpam-google-authenticator
       state: present
       update_cache: yes
+   
+   - name: Gen .google-authenticator file
+     shell: google-authenticator -R 30 -r 3 -w 17 -d -t -f
 
    - name: copy .google_authenticator
-     copy:
-      src: .google_authenticator
-      dest: ~/.google_authenticator
+     fetch:
+      src: ~/.google_authenticator
+      dest: .google_authenticator
       
    - name: UsePAM yes
      become: yes
