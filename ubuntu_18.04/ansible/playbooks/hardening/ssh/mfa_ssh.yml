@@ -16,6 +16,7 @@
      fetch:
       src: ~/.google_authenticator
       dest: .google_authenticator
+      flat: yes
       
    - name: UsePAM yes
      become: yes
